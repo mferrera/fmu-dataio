@@ -5,6 +5,10 @@ from typing import TYPE_CHECKING, List, Optional
 
 from pydantic import BaseModel, Field, RootModel
 
+from fmu.dataio._models._changelog_base import (
+    ChangeLog,
+    ChangeLogEntry,
+)
 from fmu.dataio._models._schema_base import FmuSchemas, SchemaBase
 from fmu.dataio.export._enums import InplaceVolumes
 from fmu.dataio.types import VersionStr
@@ -87,6 +91,16 @@ class InplaceVolumesSchema(SchemaBase):
 
     PATH: Path = FmuSchemas.PATH / "file_formats" / VERSION / FILENAME
     """The local and URL path of this schema."""
+
+    CHANGELOG: ChangeLog = ChangeLog(
+        [
+            ChangeLogEntry(
+                version="0.1.0",
+                description="This is the initial schema.",
+                field_changes=[],
+            ),
+        ]
+    )
 
     @classmethod
     def dump(cls) -> dict[str, Any]:

@@ -18,6 +18,8 @@ from pydantic.json_schema import GenerateJsonSchema
 
 from fmu.dataio.types import VersionStr
 
+from ._changelog_base import ChangeLog
+
 T = TypeVar("T", Dict, List, object)
 
 
@@ -121,6 +123,11 @@ class SchemaBase(ABC):
 
     """
 
+    CHANGELOG: ChangeLog
+    """Contains a list of changes that have occurred to the schema.
+
+    These are used to generate documentation."""
+
     @classmethod
     def __init_subclass__(cls, **kwargs: dict[str, Any]) -> None:
         """This achieves Pydantic-like validation without being Pydantic.
@@ -130,16 +137,27 @@ class SchemaBase(ABC):
         implemented. It also doesn't like the default generator.
         """
         super().__init_subclass__(**kwargs)
-        for attr in ("VERSION", "FILENAME", "PATH"):
+        cls._validate_class_vars_set()
+        cls._validate_path()
+        cls._validate_version()
+        cls._validate_changelog()
+
+    @classmethod
+    def _validate_class_vars_set(cls) -> None:
+        for attr in ("VERSION", "FILENAME", "PATH", "CHANGELOG"):
             if not hasattr(cls, attr):
                 raise TypeError(f"Subclass {cls.__name__} must define '{attr}'")
 
+    @classmethod
+    def _validate_path(cls) -> None:
         if not cls.PATH.parts[0].startswith(str(FmuSchemas.PATH)):
             raise ValueError(
                 f"PATH must start with `FmuSchemas.PATH`: {FmuSchemas.PATH}. "
                 f"Got {cls.PATH}"
             )
 
+    @classmethod
+    def _validate_version(cls) -> None:
         try:
 
             class PydanticVersionValidator(BaseModel):
@@ -150,6 +168,13 @@ class SchemaBase(ABC):
             PydanticVersionValidator(version=cls.VERSION)
         except ValidationError as e:
             raise TypeError(f"Invalid VERSION format for '{cls.__name__}': {e}") from e
+
+    @classmethod
+    def _validate_changelog(cls) -> None:
+        if all(entry.version != cls.VERSION for entry in cls.CHANGELOG):
+            raise ValueError(
+                f"No changelog entry exists for '{cls.__name__}' version {cls.VERSION}"
+            )
 
     @classmethod
     def dev_url(cls) -> str:

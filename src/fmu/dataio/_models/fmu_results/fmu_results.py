@@ -13,6 +13,7 @@ from pydantic import (
 )
 from typing_extensions import Annotated
 
+from fmu.dataio._models._changelog_base import ChangeLog
 from fmu.dataio._models._schema_base import (
     FmuSchemas,
     GenerateJsonSchemaBase,
@@ -20,6 +21,7 @@ from fmu.dataio._models._schema_base import (
 )
 from fmu.dataio.types import VersionStr
 
+from ._changelog import CHANGELOG
 from .data import AnyData
 from .enums import FMUClass
 from .fields import (
@@ -47,6 +49,7 @@ class FmuResultsSchema(SchemaBase):
     VERSION: VersionStr = "0.9.0"
     FILENAME: str = "fmu_results.json"
     PATH: Path = FmuSchemas.PATH / VERSION / FILENAME
+    CHANGELOG: ChangeLog = CHANGELOG
 
     SOURCE: str = "fmu"
     CONTRACTUAL: Final[list[str]] = [
